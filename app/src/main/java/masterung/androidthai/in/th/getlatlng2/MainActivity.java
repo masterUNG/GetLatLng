@@ -7,12 +7,14 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -22,6 +24,25 @@ public class MainActivity extends AppCompatActivity {
     private LocationManager locationManager;
     private Criteria criteria;
     private double latADouble, lngADouble;
+    private boolean aBoolean = false;
+    private Button button;
+
+    private int secAnInt = 2000;
+    private Handler handler = new Handler();
+    private Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+
+            Log.d("6JulyV1", "Work In Thread");
+            if (aBoolean) {
+                Log.d("6JulyV1", "Work True");
+                updateGPS();
+            }
+
+            handler.postDelayed(runnable, secAnInt);
+        }   // run
+    };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,15 +50,66 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 //        Setup Location
+        setupLocation();
+
+        updateController();
+
+//        Start Controller
+        startController();
+
+//        Stop Controller
+        stopController();
+
+    }   // Main Method
+
+    private void stopController() {
+        Button button = findViewById(R.id.btnStopGPS);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                locationManager.removeUpdates(locationListener);
+            }
+        });
+    }
+
+    private void startController() {
+        button = findViewById(R.id.btnStart);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                aBoolean = !aBoolean;
+                Log.d("6JulyV1", "aBoolent ==> " + aBoolean);
+                myLoop();
+
+            }
+        });
+    }
+
+    private void myLoop() {
+
+        if (aBoolean) {
+            button.setText("Stop");
+
+            updateGPS();
+            handler.postDelayed(runnable, secAnInt);
+
+
+        } else {
+            button.setText("Start");
+            handler.removeCallbacks(runnable);
+        }
+
+
+    }
+
+    private void setupLocation() {
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         criteria = new Criteria();
         criteria.setAccuracy(Criteria.ACCURACY_FINE);
         criteria.setAltitudeRequired(false);
         criteria.setBearingRequired(false);
-
-        updateController();
-
-    }   // Main Method
+    }
 
     private void updateController() {
         Button button = findViewById(R.id.btnUpdate);
